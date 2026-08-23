@@ -9,7 +9,7 @@ app/       Expo (React Native) client
 backend/   FastAPI backend, managed with uv
 ```
 
-## Quick start
+## Quick start for fast setup
 
 Requires [uv](https://docs.astral.sh/uv/) and Node.js 22 (see `app/.nvmrc`).
 
@@ -19,7 +19,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Node.js 22 (see `app/.nvmrc`).
 
 Then run the backend and app in separate terminals as described below.
 
-## Backend setup
+## Setting up Backend Individually
 
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.11+ (uv will fetch the interpreter if needed).
 
@@ -29,7 +29,7 @@ uv sync                # creates .venv and installs dependencies from pyproject.
 uv run uvicorn app.main:app --reload
 ```
 
-The API serves at `http://127.0.0.1:8000`, with a health check at `/health` and docs at `/docs`.
+The API serves at `http://127.0.0.1:8000` and you can view the swagger at `http://127.0.0.1:8000/docs`.
 
 Configuration is read from `backend/.env` (see `Settings` in [backend/app/core/config.py](backend/app/core/config.py)). By default it uses a local SQLite database (`metis.db`).
 
@@ -40,7 +40,7 @@ uv add <package>
 uv remove <package>
 ```
 
-## App setup
+# Setting up Mobile APP code Individually
 
 Requires Node.js and the Expo CLI (`npx` is enough, no global install needed).
 
