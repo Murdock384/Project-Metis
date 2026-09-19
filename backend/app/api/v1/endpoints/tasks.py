@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.v1.endpoints.preferences import get_or_create_preference
 from app.core.config import settings
 from app.db.base import get_db
 from app.models.scheduled_event import ScheduledEvent
@@ -11,6 +12,7 @@ from app.schemas.task import TaskCreate, TaskRead, TaskUpdate
 from app.services.scheduler_service import (
     BusyBlock,
     SchedulableTask,
+    SchedulerPreferences,
     schedule_pending_tasks,
 )
 
@@ -78,12 +80,27 @@ def run_scheduler(db: Session = Depends(get_db)):
             urgency=t.urgency,
             difficulty=t.difficulty,
             estimated_minutes=t.estimated_minutes,
+            category=t.category,
         )
         for t in pending_tasks
     ]
     busy = [BusyBlock(start_time=e.start_time, end_time=e.end_time) for e in existing_events]
 
-    results = schedule_pending_tasks(schedulable, busy)
+    preference = get_or_create_preference(db)
+    prefs = SchedulerPreferences(
+        work_start_hour=preference.work_start_hour,
+        work_end_hour=preference.work_end_hour,
+        horizon_days=preference.horizon_days,
+        slot_minutes=preference.slot_minutes,
+        peak_focus_start_hour=preference.peak_focus_start_hour,
+        peak_focus_end_hour=preference.peak_focus_end_hour,
+        min_break_minutes=preference.min_break_minutes,
+        max_daily_task_minutes=preference.max_daily_task_minutes,
+        preferred_categories=list(preference.preferred_categories or []),
+        disliked_categories=list(preference.disliked_categories or []),
+    )
+
+    results = schedule_pending_tasks(schedulable, busy, prefs)
 
     created_events: list[ScheduledEvent] = []
     scheduled_count = 0
