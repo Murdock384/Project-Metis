@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.db.base import Base, SessionLocal, engine
+from app.db.base import Base, SessionLocal, engine, ensure_schema_compatibility
 from app.models.user import User
 
 
@@ -21,6 +21,7 @@ def _seed_dev_user() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    ensure_schema_compatibility()
     Base.metadata.create_all(bind=engine)
     _seed_dev_user()
     yield

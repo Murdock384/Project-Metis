@@ -1,9 +1,11 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserPreferenceUpdate(BaseModel):
+    timezone: str | None = Field(default=None, min_length=1, max_length=64)
     work_start_hour: int | None = Field(default=None, ge=0, le=23)
     work_end_hour: int | None = Field(default=None, ge=1, le=24)
     horizon_days: int | None = Field(default=None, ge=1, le=30)
@@ -17,6 +19,17 @@ class UserPreferenceUpdate(BaseModel):
 
     preferred_categories: list[str] | None = None
     disliked_categories: list[str] | None = None
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError("timezone must be a valid IANA timezone, e.g. Europe/Warsaw") from exc
+        return value
 
 
 class UserPreferenceRead(BaseModel):
@@ -33,6 +46,7 @@ class UserPreferenceRead(BaseModel):
 
     min_break_minutes: int
     max_daily_task_minutes: int
+    timezone: str
 
     preferred_categories: list[str]
     disliked_categories: list[str]

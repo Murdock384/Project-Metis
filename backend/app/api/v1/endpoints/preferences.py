@@ -14,6 +14,7 @@ from app.schemas.user_preference import (
 router = APIRouter(prefix="/preferences", tags=["preferences"])
 
 EDITABLE_FIELDS = (
+    "timezone",
     "work_start_hour",
     "work_end_hour",
     "horizon_days",
@@ -46,6 +47,7 @@ def get_or_create_preference(db: Session) -> UserPreference:
         peak_focus_end_hour=settings.peak_focus_end_hour,
         min_break_minutes=settings.min_break_minutes,
         max_daily_task_minutes=settings.max_daily_task_minutes,
+        timezone=settings.user_timezone,
         preferred_categories=[],
         disliked_categories=[],
     )

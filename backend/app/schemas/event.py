@@ -38,8 +38,10 @@ class EventUpdate(BaseModel):
 
 class EventRead(BaseModel):
     id: int
-    task_id: int
-    task_title: str
+    task_id: int | None
+    task_title: str | None
+    title: str
+    event_type: str
     category: str | None
     start_time: datetime
     end_time: datetime
