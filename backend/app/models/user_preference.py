@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, ForeignKey
+from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -32,6 +32,7 @@ class UserPreference(Base):
     # tightly packed.
     min_break_minutes: Mapped[int] = mapped_column(default=0)
     max_daily_task_minutes: Mapped[int] = mapped_column(default=8 * 60)
+    timezone: Mapped[str] = mapped_column(String(64), default="Europe/Warsaw")
 
     preferred_categories: Mapped[list[str]] = mapped_column(JSON, default=list)
     disliked_categories: Mapped[list[str]] = mapped_column(JSON, default=list)

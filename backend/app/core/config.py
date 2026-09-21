@@ -19,6 +19,13 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["*"]
 
+    # Routes API credentials stay on the backend.  The mobile/web client only
+    # calls our transport endpoints and never receives this key.
+    google_maps_api_key: str | None = None
+    google_routes_base_url: str = "https://routes.googleapis.com/directions/v2:computeRoutes"
+    google_routes_timeout_seconds: float = 10.0
+    user_timezone: str = "Europe/Warsaw"
+
     class Config:
         env_file = ".env"
 

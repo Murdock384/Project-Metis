@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -13,14 +13,23 @@ from app.schemas.event import EventCreate, EventRead, EventUpdate
 router = APIRouter(prefix="/events", tags=["events"])
 
 
-def _to_event_read(event: ScheduledEvent, task: Task) -> EventRead:
+def _to_event_read(event: ScheduledEvent, task: Task | None = None) -> EventRead:
+    def display_time(value: datetime) -> datetime:
+        # SQLite does not round-trip timezone metadata. Transport timestamps
+        # are written in UTC, so restore that metadata for the public API.
+        if event.event_type == "transport" and value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value
+
     return EventRead(
         id=event.id,
         task_id=event.task_id,
-        task_title=task.title,
-        category=task.category,
-        start_time=event.start_time,
-        end_time=event.end_time,
+        task_title=task.title if task else None,
+        title=event.title,
+        event_type=event.event_type,
+        category=task.category if task else None,
+        start_time=display_time(event.start_time),
+        end_time=display_time(event.end_time),
         source=event.source,
         calendar_event_id=event.calendar_event_id,
     )
@@ -67,6 +76,8 @@ def create_event(payload: EventCreate, db: Session = Depends(get_db)):
     event = ScheduledEvent(
         task_id=task.id,
         user_id=settings.dev_user_id,
+        title=task.title,
+        event_type="manual",
         start_time=payload.start_time,
         end_time=payload.end_time,
         source="manual",
@@ -92,6 +103,11 @@ def update_event(event_id: int, payload: EventUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=422, detail="end_time must be after start_time")
 
     event.source = "manual"
+    if event.transport_schedule is not None:
+        # A manually dragged transport block no longer matches the saved
+        # provider itinerary. It remains on the calendar but is marked stale
+        # until the user refreshes it through the transport endpoint.
+        event.transport_schedule.status = "stale"
     db.commit()
     db.refresh(event)
     return _to_event_read(event, event.task)
